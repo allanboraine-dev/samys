@@ -8,7 +8,6 @@ import { ProFormaQuoteModal } from '@/components/ProFormaQuoteModal';
 import { 
   Building2, 
   RotateCcw, 
-  FileCheck, 
   Clock, 
   MapPin, 
   Truck, 
@@ -46,8 +45,8 @@ export default function TraderPortalPage() {
               <ArrowLeft className="w-3.5 h-3.5" />
               Back to Catalog
             </Link>
-            <div className="flex items-center gap-2">
-              <h1 className="text-2xl sm:text-3xl font-black tracking-tight">
+            <div className="flex flex-wrap items-center gap-2">
+              <h1 className="text-xl sm:text-3xl font-black tracking-tight">
                 Trader Reorder &amp; Quotes Portal
               </h1>
               <span className="bg-amber-500 text-slate-950 text-xs font-black px-2 py-0.5 rounded uppercase">
@@ -74,7 +73,7 @@ export default function TraderPortalPage() {
       <div className="max-w-6xl mx-auto px-4 sm:px-6 py-6 grid grid-cols-1 lg:grid-cols-3 gap-6">
         {/* Left 2 Cols: Past Orders and Active Quotes */}
         <div className="lg:col-span-2 space-y-4">
-          <div className="flex items-center justify-between">
+          <div className="flex flex-wrap items-center justify-between gap-2">
             <h2 className="text-base sm:text-lg font-black text-slate-900 flex items-center gap-2">
               <Building2 className="w-5 h-5 text-amber-600" />
               <span>Trader Past Orders &amp; Saved Quotes ({traderOrders.length})</span>
@@ -102,7 +101,7 @@ export default function TraderPortalPage() {
                 >
                   {/* Order header row */}
                   <div className="flex flex-wrap items-center justify-between gap-2 pb-3 border-b border-slate-100">
-                    <div className="flex items-center gap-2">
+                    <div className="flex flex-wrap items-center gap-2 w-full sm:w-auto">
                       <span className="font-mono font-bold text-xs sm:text-sm text-slate-900 bg-slate-100 px-2.5 py-1 rounded-lg">
                         {order.orderNumber}
                       </span>
@@ -136,7 +135,7 @@ export default function TraderPortalPage() {
                       <span className="font-bold text-slate-800 text-sm block">
                         {trader?.businessName || 'Kimberley Trader'}
                       </span>
-                      <div className="text-slate-500 flex items-center gap-2 mt-0.5">
+                      <div className="text-slate-500 flex flex-wrap items-center gap-x-2 gap-y-0.5 mt-0.5">
                         <span>Contact: {trader?.contactPerson}</span>
                         <span>•</span>
                         <span className="flex items-center gap-0.5 text-slate-600">
@@ -187,7 +186,7 @@ export default function TraderPortalPage() {
                       </div>
                     </div>
 
-                    <div className="flex items-center gap-2">
+                    <div className="flex flex-wrap items-center gap-2 w-full sm:w-auto">
                       <button
                         onClick={() => setSelectedQuote(order)}
                         className="bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold text-xs py-2 px-3 rounded-xl flex items-center gap-1.5 transition active:scale-95"

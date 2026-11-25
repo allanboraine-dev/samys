@@ -330,7 +330,7 @@ export default function AdminPage() {
           </div>
 
           {/* Quick Counter Stats */}
-          <div className="flex items-center gap-2 text-xs">
+          <div className="flex flex-wrap items-center gap-2 text-xs">
             <div className="bg-slate-800 px-3 py-2 rounded-xl border border-slate-700">
               <span className="text-slate-400 block text-[10px] uppercase font-bold">
                 Retail Click &amp; Collect
@@ -360,11 +360,11 @@ export default function AdminPage() {
       </div>
 
       {/* Main Tabs */}
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 pt-5">
-        <div className="flex items-center gap-2 border-b border-slate-200 pb-3">
+      <div className="max-w-7xl mx-auto px-3 sm:px-6 pt-5">
+        <div className="flex items-center gap-2 border-b border-slate-200 pb-3 overflow-x-auto no-scrollbar">
           <button
             onClick={() => setActiveTab('retail')}
-            className={`px-4 py-2 rounded-xl text-xs sm:text-sm font-bold flex items-center gap-2 transition ${
+            className={`px-3.5 sm:px-4 py-2 rounded-xl text-xs sm:text-sm font-bold flex items-center gap-2 whitespace-nowrap shrink-0 transition ${
               activeTab === 'retail'
                 ? 'bg-red-600 text-white shadow-sm'
                 : 'bg-white text-slate-700 hover:bg-slate-50 border border-slate-200'
@@ -376,7 +376,7 @@ export default function AdminPage() {
 
           <button
             onClick={() => setActiveTab('trader')}
-            className={`px-4 py-2 rounded-xl text-xs sm:text-sm font-bold flex items-center gap-2 transition ${
+            className={`px-3.5 sm:px-4 py-2 rounded-xl text-xs sm:text-sm font-bold flex items-center gap-2 whitespace-nowrap shrink-0 transition ${
               activeTab === 'trader'
                 ? 'bg-amber-500 text-slate-950 shadow-sm'
                 : 'bg-white text-slate-700 hover:bg-slate-50 border border-slate-200'
@@ -388,7 +388,7 @@ export default function AdminPage() {
 
           <button
             onClick={() => setActiveTab('inventory')}
-            className={`px-4 py-2 rounded-xl text-xs sm:text-sm font-bold flex items-center gap-2 transition ${
+            className={`px-3.5 sm:px-4 py-2 rounded-xl text-xs sm:text-sm font-bold flex items-center gap-2 whitespace-nowrap shrink-0 transition ${
               activeTab === 'inventory'
                 ? 'bg-slate-900 text-white shadow-sm'
                 : 'bg-white text-slate-700 hover:bg-slate-50 border border-slate-200'
@@ -400,7 +400,7 @@ export default function AdminPage() {
 
           <button
             onClick={() => setActiveTab('archive')}
-            className={`px-4 py-2 rounded-xl text-xs sm:text-sm font-bold flex items-center gap-2 transition ${
+            className={`px-3.5 sm:px-4 py-2 rounded-xl text-xs sm:text-sm font-bold flex items-center gap-2 whitespace-nowrap shrink-0 transition ${
               activeTab === 'archive'
                 ? 'bg-emerald-700 text-white shadow-sm'
                 : 'bg-white text-slate-700 hover:bg-slate-50 border border-slate-200'

@@ -194,8 +194,8 @@ export const CartDrawer: React.FC = () => {
           className="absolute inset-0 bg-slate-950/60 backdrop-blur-sm transition-opacity"
         />
 
-        <div className="fixed inset-y-0 right-0 max-w-full flex pl-10">
-          <div className="w-screen max-w-md bg-white shadow-2xl flex flex-col justify-between">
+        <div className="fixed inset-y-0 right-0 max-w-full flex pl-4 sm:pl-10">
+          <div className="w-[calc(100vw-1rem)] sm:w-screen max-w-md bg-white shadow-2xl flex flex-col justify-between h-full">
             {/* Top Bar */}
             <div className="p-4 bg-slate-900 text-white flex items-center justify-between border-b border-slate-800">
               <div className="flex items-center gap-2">

@@ -17,7 +17,7 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="en" suppressHydrationWarning>
-      <body className="antialiased bg-slate-50 text-slate-900 min-h-screen flex flex-col" suppressHydrationWarning>
+      <body className="antialiased bg-slate-50 text-slate-900 min-h-dvh flex flex-col overflow-x-hidden" suppressHydrationWarning>
         <AppProvider>
           <Header />
           <main className="flex-1">{children}</main>

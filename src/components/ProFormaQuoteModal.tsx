@@ -22,8 +22,8 @@ export const ProFormaQuoteModal: React.FC<ProFormaQuoteModalProps> = ({ order, o
   };
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-4 bg-slate-950/70 backdrop-blur-sm overflow-y-auto">
-      <div className="bg-white rounded-3xl max-w-2xl w-full overflow-hidden shadow-2xl border border-slate-200 animate-in fade-in zoom-in-95 duration-200 my-6">
+    <div className="fixed inset-0 z-50 flex items-start sm:items-center justify-center p-3 sm:p-4 bg-slate-950/70 backdrop-blur-sm overflow-y-auto">
+      <div className="bg-white rounded-3xl max-w-2xl w-full overflow-hidden shadow-2xl border border-slate-200 animate-in fade-in zoom-in-95 duration-200 my-4 sm:my-6">
         {/* Header Modal Bar */}
         <div className="bg-slate-900 text-white p-4 sm:p-5 flex items-center justify-between">
           <div className="flex items-center gap-2.5">
