@@ -42,6 +42,67 @@ const ACTIVE_STATUS_STEPS: OrderStatus[] = [
   'Ready for Collection',
 ];
 
+function OrderPickingList({
+  order,
+  pickedKeys,
+  onToggleItem,
+}: {
+  order: Order;
+  pickedKeys: Record<string, boolean>;
+  onToggleItem: (key: string) => void;
+}) {
+  const pickedCount = order.items.filter(
+    (_, idx) => pickedKeys[`${order.id}-${idx}`]
+  ).length;
+
+  return (
+    <div className="bg-slate-50 p-2.5 rounded-xl border border-slate-200/80 text-[11px] space-y-1.5">
+      <div className="flex items-center justify-between text-[10px] font-bold uppercase tracking-wide text-slate-500 pb-1 border-b border-slate-200/70">
+        <span>Picking List</span>
+        <span className="font-mono text-slate-700">
+          {pickedCount}/{order.items.length} picked
+        </span>
+      </div>
+      <ul className="space-y-1.5 max-h-44 overflow-y-auto pr-0.5">
+        {order.items.map((item, idx) => {
+          const key = `${order.id}-${idx}`;
+          const isPicked = Boolean(pickedKeys[key]);
+          return (
+            <li key={key}>
+              <label className="flex items-start gap-2 cursor-pointer select-none group">
+                <input
+                  type="checkbox"
+                  checked={isPicked}
+                  onChange={() => onToggleItem(key)}
+                  className="mt-0.5 w-3.5 h-3.5 rounded accent-emerald-600 shrink-0"
+                />
+                <div className="flex-1 min-w-0">
+                  <div
+                    className={`font-bold leading-snug ${
+                      isPicked ? 'line-through text-slate-400' : 'text-slate-900'
+                    }`}
+                  >
+                    <span className="inline-block bg-slate-200 text-slate-900 font-mono font-black px-1.5 py-0.2 rounded mr-1 text-[10px]">
+                      {item.quantity}x
+                    </span>
+                    {item.productName}
+                  </div>
+                  <div className="flex items-center justify-between text-[10px] text-slate-500 mt-0.5">
+                    <span className="truncate">{item.unitType}</span>
+                    <span className="font-mono font-semibold text-slate-700 ml-2 shrink-0">
+                      R{item.lineTotal.toFixed(2)}
+                    </span>
+                  </div>
+                </div>
+              </label>
+            </li>
+          );
+        })}
+      </ul>
+    </div>
+  );
+}
+
 function buildWhatsAppNotifyUrl(order: Order): string | null {
   const rawPhone =
     order.retailDetails?.whatsappNumber || order.traderDetails?.whatsappNumber;
@@ -76,6 +137,11 @@ export default function AdminPage() {
   const [activeTab, setActiveTab] = useState<'retail' | 'trader' | 'archive' | 'inventory'>('retail');
   const [archiveSearch, setArchiveSearch] = useState('');
   const [confirmClearArchive, setConfirmClearArchive] = useState(false);
+  const [pickedItems, setPickedItems] = useState<Record<string, boolean>>({});
+
+  const togglePickedItem = (key: string) => {
+    setPickedItems((prev) => ({ ...prev, [key]: !prev[key] }));
+  };
   const [isProductModalOpen, setIsProductModalOpen] = useState(false);
   const [isCsvModalOpen, setIsCsvModalOpen] = useState(false);
   const [editingProduct, setEditingProduct] = useState<Product | null>(null);
@@ -401,6 +467,13 @@ export default function AdminPage() {
                               </span>
                             </div>
 
+                            {/* Picking List */}
+                            <OrderPickingList
+                              order={order}
+                              pickedKeys={pickedItems}
+                              onToggleItem={togglePickedItem}
+                            />
+
                             {/* Item Count & Total */}
                             <div className="flex justify-between items-center pt-2 border-t border-slate-100">
                               <span className="text-slate-500">
@@ -501,16 +574,12 @@ export default function AdminPage() {
                               </div>
                             </div>
 
-                            {/* Items count */}
-                            <div className="bg-slate-50 p-2 rounded-lg border border-slate-100 text-[11px] space-y-1">
-                              <span className="text-slate-400 font-semibold block">
-                                Case Packing:
-                              </span>
-                              <div className="font-medium text-slate-700">
-                                {order.items.length} wholesale lines (
-                                {order.items.reduce((s, i) => s + i.quantity, 0)} total cases)
-                              </div>
-                            </div>
+                            {/* Case Packing & Picking List */}
+                            <OrderPickingList
+                              order={order}
+                              pickedKeys={pickedItems}
+                              onToggleItem={togglePickedItem}
+                            />
 
                             {/* Total */}
                             <div className="flex justify-between items-center pt-2 border-t border-slate-100">
@@ -660,8 +729,13 @@ export default function AdminPage() {
                               <div className="font-bold text-slate-900">{customerName}</div>
                               {phone && <div className="text-[11px] text-slate-500">{phone}</div>}
                             </td>
-                            <td className="p-3 text-slate-600">
-                              {order.items.reduce((s, i) => s + i.quantity, 0)} unit(s)
+                            <td className="p-3 text-slate-600 max-w-xs">
+                              <div className="font-semibold text-slate-800">
+                                {order.items.reduce((s, i) => s + i.quantity, 0)} unit(s)
+                              </div>
+                              <div className="text-[11px] text-slate-500 truncate">
+                                {order.items.map((i) => `${i.quantity}x ${i.productName}`).join(', ')}
+                              </div>
                             </td>
                             <td className="p-3 font-mono font-black text-emerald-700">
                               R{order.total.toFixed(2)}
