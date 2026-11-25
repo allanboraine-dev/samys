@@ -12,11 +12,7 @@ import {
   Minus, 
   ShoppingBag, 
   ArrowRight, 
-  Clock, 
   Truck, 
-  Store, 
-  Building2, 
-  Check, 
   FileText, 
   ShieldCheck 
 } from 'lucide-react';
@@ -42,7 +38,6 @@ export const CartDrawer: React.FC = () => {
     isCartOpen,
     setIsCartOpen,
     cart,
-    removeFromCart,
     updateQuantity,
     clearCart,
     mode,
@@ -77,7 +72,7 @@ export const CartDrawer: React.FC = () => {
     'Trader Bulk Dispatch Lane' | 'Local Bulk Delivery'
   >('Trader Bulk Dispatch Lane');
 
-  if (!isCartOpen) return null;
+  if (!isCartOpen && !generatedPassOrder && !generatedQuoteOrder) return null;
 
   const handleRetailCheckout = (e: React.FormEvent) => {
     e.preventDefault();
@@ -188,6 +183,7 @@ export const CartDrawer: React.FC = () => {
 
   return (
     <>
+      {isCartOpen && (
       <div className="fixed inset-0 z-50 overflow-hidden">
         {/* Backdrop */}
         <div
@@ -291,6 +287,8 @@ export const CartDrawer: React.FC = () => {
                         <div className="flex items-center gap-2">
                           <div className="flex items-center bg-white border border-slate-300 rounded-xl overflow-hidden shadow-sm">
                             <button
+                              type="button"
+                              aria-label={`Decrease quantity for ${item.product.name}`}
                               onClick={() =>
                                 updateQuantity(
                                   item.product.id,
@@ -306,6 +304,8 @@ export const CartDrawer: React.FC = () => {
                               {item.quantity}
                             </span>
                             <button
+                              type="button"
+                              aria-label={`Increase quantity for ${item.product.name}`}
                               onClick={() =>
                                 updateQuantity(
                                   item.product.id,
@@ -648,6 +648,7 @@ export const CartDrawer: React.FC = () => {
           </div>
         </div>
       </div>
+      )}
 
       {/* Generated Modals */}
       {generatedPassOrder && (

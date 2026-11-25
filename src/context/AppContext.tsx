@@ -41,27 +41,31 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
 
   // Load from localStorage if available
   useEffect(() => {
-    try {
-      const savedMode = localStorage.getItem('sammys_buying_mode') as BuyingMode;
-      if (savedMode === 'retail' || savedMode === 'trader') {
-        setMode(savedMode);
+    const timer = setTimeout(() => {
+      try {
+        const savedMode = localStorage.getItem('sammys_buying_mode') as BuyingMode;
+        if (savedMode === 'retail' || savedMode === 'trader') {
+          setMode(savedMode);
+        }
+        const savedCart = localStorage.getItem('sammys_cart');
+        if (savedCart) {
+          setCart(JSON.parse(savedCart));
+        }
+        const savedOrders = localStorage.getItem('sammys_orders');
+        if (savedOrders) {
+          setOrders(JSON.parse(savedOrders));
+        }
+        const savedProducts = localStorage.getItem('sammys_products');
+        if (savedProducts) {
+          setProducts(JSON.parse(savedProducts));
+        }
+      } catch {
+        // Ignore local storage errors
       }
-      const savedCart = localStorage.getItem('sammys_cart');
-      if (savedCart) {
-        setCart(JSON.parse(savedCart));
-      }
-      const savedOrders = localStorage.getItem('sammys_orders');
-      if (savedOrders) {
-        setOrders(JSON.parse(savedOrders));
-      }
-      const savedProducts = localStorage.getItem('sammys_products');
-      if (savedProducts) {
-        setProducts(JSON.parse(savedProducts));
-      }
-    } catch {
-      // Ignore local storage errors
-    }
-    setMounted(true);
+      setMounted(true);
+    }, 0);
+
+    return () => clearTimeout(timer);
   }, []);
 
   // Save changes to localStorage

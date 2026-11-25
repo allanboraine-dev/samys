@@ -25,7 +25,7 @@ export const CatalogSection: React.FC = () => {
     return products.filter((product) => {
       // Category match
       if (selectedCategory === "This Week's Specials") {
-        if (!product.isMonthEndSpecial && !product.retailOldPrice && !product.traderOldCasePrice) {
+        if (!product.isMonthEndSpecial) {
           return false;
         }
       } else if (selectedCategory !== 'All' && product.category !== selectedCategory) {
@@ -49,7 +49,13 @@ export const CatalogSection: React.FC = () => {
   return (
     <div className="max-w-7xl mx-auto px-3 sm:px-6 py-6 sm:py-8">
       {/* Promotional Banner Hero */}
-      <div className="relative overflow-hidden rounded-3xl bg-gradient-to-r from-slate-900 via-slate-850 to-slate-900 text-white p-5 sm:p-8 mb-6 sm:mb-8 border border-slate-800 shadow-lg">
+      <div className="relative overflow-hidden rounded-3xl bg-slate-900 text-white p-5 sm:p-8 mb-6 sm:mb-8 border border-slate-800 shadow-lg">
+        <img
+          src="/images/sammys-storefront.jpg"
+          alt="Samy's Wholesalers Storefront in Kimberley"
+          className="absolute inset-0 w-full h-full object-cover object-[center_25%] opacity-40"
+        />
+        <div className="absolute inset-0 bg-gradient-to-r from-slate-950/95 via-slate-900/80 to-slate-900/55 pointer-events-none" />
         <div className="absolute top-0 right-0 -mt-10 -mr-10 w-64 h-64 bg-red-600/20 rounded-full blur-3xl pointer-events-none" />
         <div className="absolute bottom-0 left-1/3 -mb-10 w-64 h-64 bg-amber-500/15 rounded-full blur-3xl pointer-events-none" />
 
