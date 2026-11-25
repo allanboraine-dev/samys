@@ -142,6 +142,12 @@ export default function AdminPage() {
   const togglePickedItem = (key: string) => {
     setPickedItems((prev) => ({ ...prev, [key]: !prev[key] }));
   };
+
+  const getPickingProgress = (order: Order) => {
+    const picked = order.items.filter((_, idx) => pickedItems[`${order.id}-${idx}`]).length;
+    const total = order.items.length;
+    return { picked, total, allPicked: total === 0 || picked === total };
+  };
   const [isProductModalOpen, setIsProductModalOpen] = useState(false);
   const [isCsvModalOpen, setIsCsvModalOpen] = useState(false);
   const [editingProduct, setEditingProduct] = useState<Product | null>(null);
@@ -485,17 +491,33 @@ export default function AdminPage() {
                             </div>
 
                             {/* Action to advance status + Notify Customer */}
-                            {status !== 'Collected' && (
-                              <button
-                                onClick={() => advanceStatus(order)}
-                                className="w-full bg-slate-900 hover:bg-slate-800 text-white font-bold text-xs py-2 rounded-lg transition flex items-center justify-center gap-1.5 active:scale-95"
-                              >
-                                <span>Advance to</span>
-                                <strong className="text-amber-400">
-                                  {STATUS_STEPS[STATUS_STEPS.indexOf(status) + 1]}
-                                </strong>
-                              </button>
-                            )}
+                            {status !== 'Collected' && (() => {
+                              const { picked, total, allPicked } = getPickingProgress(order);
+                              const blockedByPicking = status === 'Picking' && !allPicked;
+                              return (
+                                <button
+                                  type="button"
+                                  disabled={blockedByPicking}
+                                  onClick={() => advanceStatus(order)}
+                                  className={`w-full font-bold text-xs py-2 rounded-lg transition flex items-center justify-center gap-1.5 ${
+                                    blockedByPicking
+                                      ? 'bg-slate-200 text-slate-500 cursor-not-allowed'
+                                      : 'bg-slate-900 hover:bg-slate-800 text-white active:scale-95'
+                                  }`}
+                                >
+                                  {blockedByPicking ? (
+                                    <span>Check all items ({picked}/{total}) to advance</span>
+                                  ) : (
+                                    <>
+                                      <span>Advance to</span>
+                                      <strong className="text-amber-400">
+                                        {STATUS_STEPS[STATUS_STEPS.indexOf(status) + 1]}
+                                      </strong>
+                                    </>
+                                  )}
+                                </button>
+                              );
+                            })()}
                             {buildWhatsAppNotifyUrl(order) && (
                               <a
                                 href={buildWhatsAppNotifyUrl(order) ?? '#'}
@@ -590,17 +612,33 @@ export default function AdminPage() {
                             </div>
 
                             {/* Advance + Notify Customer */}
-                            {status !== 'Collected' && (
-                              <button
-                                onClick={() => advanceStatus(order)}
-                                className="w-full bg-amber-500 hover:bg-amber-600 text-slate-950 font-black text-xs py-2 rounded-lg transition flex items-center justify-center gap-1.5 active:scale-95 shadow-sm"
-                              >
-                                <span>Advance to</span>
-                                <strong>
-                                  {STATUS_STEPS[STATUS_STEPS.indexOf(status) + 1]}
-                                </strong>
-                              </button>
-                            )}
+                            {status !== 'Collected' && (() => {
+                              const { picked, total, allPicked } = getPickingProgress(order);
+                              const blockedByPicking = status === 'Picking' && !allPicked;
+                              return (
+                                <button
+                                  type="button"
+                                  disabled={blockedByPicking}
+                                  onClick={() => advanceStatus(order)}
+                                  className={`w-full font-black text-xs py-2 rounded-lg transition flex items-center justify-center gap-1.5 shadow-sm ${
+                                    blockedByPicking
+                                      ? 'bg-slate-200 text-slate-500 cursor-not-allowed shadow-none'
+                                      : 'bg-amber-500 hover:bg-amber-600 text-slate-950 active:scale-95'
+                                  }`}
+                                >
+                                  {blockedByPicking ? (
+                                    <span>Check all items ({picked}/{total}) to advance</span>
+                                  ) : (
+                                    <>
+                                      <span>Advance to</span>
+                                      <strong>
+                                        {STATUS_STEPS[STATUS_STEPS.indexOf(status) + 1]}
+                                      </strong>
+                                    </>
+                                  )}
+                                </button>
+                              );
+                            })()}
                             {buildWhatsAppNotifyUrl(order) && (
                               <a
                                 href={buildWhatsAppNotifyUrl(order) ?? '#'}
