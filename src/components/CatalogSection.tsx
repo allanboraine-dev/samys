@@ -49,17 +49,16 @@ export const CatalogSection: React.FC = () => {
   return (
     <div className="max-w-7xl mx-auto px-3 sm:px-6 py-6 sm:py-8">
       {/* Promotional Banner Hero */}
-      <div className="relative overflow-hidden rounded-3xl bg-slate-900 text-white p-5 sm:p-8 mb-6 sm:mb-8 border border-slate-800 shadow-lg">
+      <div className="relative overflow-hidden rounded-3xl bg-slate-900 text-white p-6 sm:p-10 mb-6 sm:mb-8 border border-slate-800 shadow-lg min-h-[220px] sm:min-h-[260px] flex items-center">
         <img
           src="/images/sammys-storefront.jpg"
           alt="Samy's Wholesalers Storefront in Kimberley"
-          className="absolute inset-0 w-full h-full object-cover object-[center_25%] opacity-40"
+          className="absolute inset-0 w-full h-full object-cover object-[center_18%] opacity-95"
         />
-        <div className="absolute inset-0 bg-gradient-to-r from-slate-950/95 via-slate-900/80 to-slate-900/55 pointer-events-none" />
-        <div className="absolute top-0 right-0 -mt-10 -mr-10 w-64 h-64 bg-red-600/20 rounded-full blur-3xl pointer-events-none" />
-        <div className="absolute bottom-0 left-1/3 -mb-10 w-64 h-64 bg-amber-500/15 rounded-full blur-3xl pointer-events-none" />
+        <div className="absolute inset-0 bg-gradient-to-r from-slate-950/90 via-slate-950/50 to-slate-950/15 pointer-events-none" />
+        <div className="absolute top-0 right-0 -mt-10 -mr-10 w-64 h-64 bg-red-600/15 rounded-full blur-3xl pointer-events-none" />
 
-        <div className="relative z-10 flex flex-col md:flex-row md:items-center justify-between gap-4">
+        <div className="relative z-10 w-full flex flex-col md:flex-row md:items-center justify-between gap-4">
           <div className="max-w-xl">
             <div className="inline-flex items-center gap-1.5 bg-red-600/90 text-white text-xs font-black px-3 py-1 rounded-full uppercase tracking-wider mb-2.5 shadow-sm">
               <Flame className="w-3.5 h-3.5 fill-white" />

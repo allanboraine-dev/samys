@@ -49,12 +49,21 @@ export const ProductCard: React.FC<ProductCardProps> = ({ product }) => {
           </div>
 
           {/* Stock Indicator */}
-          {!product.inStock && (
+          {!product.inStock ? (
             <div className="absolute inset-0 bg-slate-950/60 backdrop-blur-[2px] flex items-center justify-center z-20">
               <span className="bg-red-600 text-white text-xs font-bold px-3 py-1 rounded-full uppercase tracking-wider">
                 Out of Stock
               </span>
             </div>
+          ) : (
+            typeof product.stockQuantity === 'number' &&
+            product.stockQuantity <= 10 && (
+              <div className="absolute bottom-2.5 left-2.5 z-10">
+                <span className="bg-amber-500 text-slate-950 text-[10px] font-black px-2 py-0.5 rounded shadow uppercase tracking-wide">
+                  Only {product.stockQuantity} left
+                </span>
+              </div>
+            )
           )}
         </div>
 

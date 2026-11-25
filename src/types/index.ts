@@ -19,6 +19,7 @@ export interface Product {
   badge?: string;
   isMonthEndSpecial?: boolean;
   inStock: boolean;
+  stockQuantity?: number;
   
   // Retail Mode
   retailUnit: string; // e.g. "125g packet" or "2L Bottle"

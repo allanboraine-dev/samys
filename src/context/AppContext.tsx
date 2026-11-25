@@ -19,6 +19,10 @@ interface AppContextType {
   orders: Order[];
   addOrder: (order: Order) => void;
   updateOrderStatus: (orderId: string, status: OrderStatus) => void;
+  addProduct: (product: Omit<Product, 'id'>) => void;
+  updateProduct: (productId: string, updates: Partial<Product>) => void;
+  deleteProduct: (productId: string) => void;
+  updateProductStockQuantity: (productId: string, quantity: number) => void;
   toggleProductStock: (productId: string) => void;
   toggleProductPromo: (productId: string) => void;
   reorderItems: (orderItems: Order['items']) => void;
@@ -35,7 +39,12 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
   const [mode, setMode] = useState<BuyingMode>('retail');
   const [cart, setCart] = useState<CartItem[]>([]);
   const [isCartOpen, setIsCartOpen] = useState(false);
-  const [products, setProducts] = useState<Product[]>(INITIAL_PRODUCTS);
+  const [products, setProducts] = useState<Product[]>(() =>
+    INITIAL_PRODUCTS.map((p) => ({
+      ...p,
+      stockQuantity: p.stockQuantity ?? (p.inStock ? 50 : 0),
+    }))
+  );
   const [orders, setOrders] = useState<Order[]>(INITIAL_ORDERS);
   const [mounted, setMounted] = useState(false);
 
@@ -57,7 +66,13 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
         }
         const savedProducts = localStorage.getItem('sammys_products');
         if (savedProducts) {
-          setProducts(JSON.parse(savedProducts));
+          const parsed = JSON.parse(savedProducts) as Product[];
+          setProducts(
+            parsed.map((p) => ({
+              ...p,
+              stockQuantity: p.stockQuantity ?? (p.inStock ? 50 : 0),
+            }))
+          );
         }
       } catch {
         // Ignore local storage errors
@@ -136,9 +151,67 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
     );
   };
 
+  const addProduct = (productData: Omit<Product, 'id'>) => {
+    const qty = Math.max(0, Math.floor(productData.stockQuantity ?? (productData.inStock ? 50 : 0)));
+    const newProduct: Product = {
+      ...productData,
+      id: `sam-${Date.now()}`,
+      stockQuantity: qty,
+      inStock: qty > 0,
+    };
+    setProducts((prev) => [newProduct, ...prev]);
+  };
+
+  const updateProduct = (productId: string, updates: Partial<Product>) => {
+    setProducts((prev) =>
+      prev.map((p) => {
+        if (p.id !== productId) return p;
+        const nextQty =
+          updates.stockQuantity !== undefined
+            ? Math.max(0, Math.floor(updates.stockQuantity))
+            : p.stockQuantity ?? (p.inStock ? 50 : 0);
+        const nextInStock =
+          updates.stockQuantity !== undefined
+            ? nextQty > 0
+            : updates.inStock ?? p.inStock;
+        return {
+          ...p,
+          ...updates,
+          stockQuantity: nextQty,
+          inStock: nextInStock,
+        };
+      })
+    );
+  };
+
+  const deleteProduct = (productId: string) => {
+    setProducts((prev) => prev.filter((p) => p.id !== productId));
+    setCart((prev) => prev.filter((item) => item.product.id !== productId));
+  };
+
+  const updateProductStockQuantity = (productId: string, quantity: number) => {
+    const nextQty = Math.max(0, Math.floor(Number.isFinite(quantity) ? quantity : 0));
+    setProducts((prev) =>
+      prev.map((p) =>
+        p.id === productId
+          ? { ...p, stockQuantity: nextQty, inStock: nextQty > 0 }
+          : p
+      )
+    );
+  };
+
   const toggleProductStock = (productId: string) => {
     setProducts((prev) =>
-      prev.map((p) => (p.id === productId ? { ...p, inStock: !p.inStock } : p))
+      prev.map((p) => {
+        if (p.id !== productId) return p;
+        const nextInStock = !p.inStock;
+        const currentQty = p.stockQuantity ?? (p.inStock ? 50 : 0);
+        return {
+          ...p,
+          inStock: nextInStock,
+          stockQuantity: nextInStock ? (currentQty > 0 ? currentQty : 25) : 0,
+        };
+      })
     );
   };
 
@@ -208,6 +281,10 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
         orders,
         addOrder,
         updateOrderStatus,
+        addProduct,
+        updateProduct,
+        deleteProduct,
+        updateProductStockQuantity,
         toggleProductStock,
         toggleProductPromo,
         reorderItems,
