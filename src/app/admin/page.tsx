@@ -23,7 +23,10 @@ import {
   Lock,
   LogOut,
   ShieldAlert,
-  FileSpreadsheet
+  FileSpreadsheet,
+  Archive,
+  RotateCcw,
+  Search
 } from 'lucide-react';
 
 const STATUS_STEPS: OrderStatus[] = [
@@ -31,6 +34,12 @@ const STATUS_STEPS: OrderStatus[] = [
   'Picking',
   'Ready for Collection',
   'Collected',
+];
+
+const ACTIVE_STATUS_STEPS: OrderStatus[] = [
+  'New',
+  'Picking',
+  'Ready for Collection',
 ];
 
 function buildWhatsAppNotifyUrl(order: Order): string | null {
@@ -53,6 +62,7 @@ export default function AdminPage() {
   const {
     orders,
     updateOrderStatus,
+    clearCompletedOrders,
     products,
     addProduct,
     updateProduct,
@@ -63,7 +73,9 @@ export default function AdminPage() {
     toggleProductPromo,
   } = useApp();
 
-  const [activeTab, setActiveTab] = useState<'retail' | 'trader' | 'inventory'>('retail');
+  const [activeTab, setActiveTab] = useState<'retail' | 'trader' | 'archive' | 'inventory'>('retail');
+  const [archiveSearch, setArchiveSearch] = useState('');
+  const [confirmClearArchive, setConfirmClearArchive] = useState(false);
   const [isProductModalOpen, setIsProductModalOpen] = useState(false);
   const [isCsvModalOpen, setIsCsvModalOpen] = useState(false);
   const [editingProduct, setEditingProduct] = useState<Product | null>(null);
@@ -120,9 +132,25 @@ export default function AdminPage() {
     setAuthStatus('locked');
   };
 
-  // Filter orders by queue
-  const retailOrders = orders.filter((o) => o.type === 'retail_click_collect');
-  const traderOrders = orders.filter((o) => o.type === 'trader_bulk');
+  // Filter orders by queue (active boards exclude Collected; Collected moves to Archive)
+  const retailOrders = orders.filter(
+    (o) => o.type === 'retail_click_collect' && o.status !== 'Collected'
+  );
+  const traderOrders = orders.filter(
+    (o) => o.type === 'trader_bulk' && o.status !== 'Collected'
+  );
+  const completedOrders = orders.filter((o) => o.status === 'Collected');
+  const filteredCompletedOrders = completedOrders.filter((o) => {
+    if (!archiveSearch.trim()) return true;
+    const q = archiveSearch.toLowerCase();
+    const customer = o.retailDetails?.customerName || o.traderDetails?.businessName || '';
+    const phone = o.retailDetails?.whatsappNumber || o.traderDetails?.whatsappNumber || '';
+    return (
+      o.orderNumber.toLowerCase().includes(q) ||
+      customer.toLowerCase().includes(q) ||
+      phone.toLowerCase().includes(q)
+    );
+  });
 
   const advanceStatus = (order: Order) => {
     const currentIndex = STATUS_STEPS.indexOf(order.status);
@@ -297,13 +325,25 @@ export default function AdminPage() {
             <Package className="w-4 h-4" />
             <span>Stock &amp; Specials Manager ({products.length})</span>
           </button>
+
+          <button
+            onClick={() => setActiveTab('archive')}
+            className={`px-4 py-2 rounded-xl text-xs sm:text-sm font-bold flex items-center gap-2 transition ${
+              activeTab === 'archive'
+                ? 'bg-emerald-700 text-white shadow-sm'
+                : 'bg-white text-slate-700 hover:bg-slate-50 border border-slate-200'
+            }`}
+          >
+            <Archive className="w-4 h-4" />
+            <span>Completed Archive ({completedOrders.length})</span>
+          </button>
         </div>
 
         {/* Content Area */}
         <div className="py-6">
           {activeTab === 'retail' && (
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-              {STATUS_STEPS.map((status) => {
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+              {ACTIVE_STATUS_STEPS.map((status) => {
                 const columnOrders = retailOrders.filter((o) => o.status === status);
                 return (
                   <div
@@ -405,8 +445,8 @@ export default function AdminPage() {
           )}
 
           {activeTab === 'trader' && (
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-              {STATUS_STEPS.map((status) => {
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+              {ACTIVE_STATUS_STEPS.map((status) => {
                 const columnOrders = traderOrders.filter((o) => o.status === status);
                 return (
                   <div
@@ -510,6 +550,142 @@ export default function AdminPage() {
                   </div>
                 );
               })}
+            </div>
+          )}
+
+          {activeTab === 'archive' && (
+            <div className="bg-white rounded-2xl border border-slate-200 overflow-hidden shadow-sm">
+              <div className="p-4 bg-slate-50 border-b border-slate-200 flex flex-wrap items-center justify-between gap-3">
+                <div>
+                  <h3 className="font-bold text-slate-900 text-sm">
+                    Completed &amp; Paid Orders Archive
+                  </h3>
+                  <p className="text-xs text-slate-500">
+                    Orders marked as Collected &amp; Paid move here automatically to keep live dispatch boards uncluttered.
+                  </p>
+                </div>
+
+                <div className="flex flex-wrap items-center gap-2">
+                  <div className="relative">
+                    <Search className="w-3.5 h-3.5 text-slate-400 absolute left-3 top-1/2 -translate-y-1/2" />
+                    <input
+                      type="text"
+                      value={archiveSearch}
+                      onChange={(e) => setArchiveSearch(e.target.value)}
+                      placeholder="Search order #, name, phone..."
+                      className="pl-8 pr-3 py-1.5 text-xs border border-slate-300 rounded-xl bg-white text-slate-900 focus:outline-none focus:ring-2 focus:ring-slate-900"
+                    />
+                  </div>
+
+                  {completedOrders.length > 0 && (
+                    confirmClearArchive ? (
+                      <div className="inline-flex items-center gap-1.5 text-xs">
+                        <button
+                          type="button"
+                          onClick={() => {
+                            clearCompletedOrders();
+                            setConfirmClearArchive(false);
+                          }}
+                          className="px-3 py-1.5 rounded-xl bg-red-600 hover:bg-red-700 text-white font-bold"
+                        >
+                          Confirm Clear All
+                        </button>
+                        <button
+                          type="button"
+                          onClick={() => setConfirmClearArchive(false)}
+                          className="px-2.5 py-1.5 rounded-xl bg-slate-200 text-slate-700 font-semibold"
+                        >
+                          Cancel
+                        </button>
+                      </div>
+                    ) : (
+                      <button
+                        type="button"
+                        onClick={() => setConfirmClearArchive(true)}
+                        className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-red-50 hover:bg-red-100 text-red-700 border border-red-200 text-xs font-bold transition"
+                      >
+                        <Trash2 className="w-3.5 h-3.5" />
+                        <span>Clear Archive</span>
+                      </button>
+                    )
+                  )}
+                </div>
+              </div>
+
+              {filteredCompletedOrders.length === 0 ? (
+                <div className="p-10 text-center text-xs text-slate-500">
+                  No completed orders in the archive.
+                </div>
+              ) : (
+                <div className="overflow-x-auto">
+                  <table className="w-full text-left text-xs border-collapse">
+                    <thead>
+                      <tr className="bg-slate-100 text-slate-600 font-bold uppercase text-[10px] border-b border-slate-200">
+                        <th className="p-3">Order #</th>
+                        <th className="p-3">Channel</th>
+                        <th className="p-3">Customer / Business</th>
+                        <th className="p-3">Items</th>
+                        <th className="p-3">Total Paid</th>
+                        <th className="p-3">Date</th>
+                        <th className="p-3 text-right">Action</th>
+                      </tr>
+                    </thead>
+                    <tbody className="divide-y divide-slate-100">
+                      {filteredCompletedOrders.map((order) => {
+                        const customerName =
+                          order.retailDetails?.customerName ||
+                          order.traderDetails?.businessName ||
+                          'Customer';
+                        const phone =
+                          order.retailDetails?.whatsappNumber ||
+                          order.traderDetails?.whatsappNumber ||
+                          '';
+                        return (
+                          <tr key={order.id} className="hover:bg-slate-50/50">
+                            <td className="p-3 font-mono font-bold text-slate-900">
+                              {order.orderNumber}
+                            </td>
+                            <td className="p-3">
+                              <span
+                                className={`text-[10px] font-bold px-2 py-0.5 rounded-full uppercase ${
+                                  order.type === 'retail_click_collect'
+                                    ? 'bg-red-100 text-red-800'
+                                    : 'bg-amber-100 text-amber-900'
+                                }`}
+                              >
+                                {order.type === 'retail_click_collect' ? 'Retail' : 'Trader Bulk'}
+                              </span>
+                            </td>
+                            <td className="p-3">
+                              <div className="font-bold text-slate-900">{customerName}</div>
+                              {phone && <div className="text-[11px] text-slate-500">{phone}</div>}
+                            </td>
+                            <td className="p-3 text-slate-600">
+                              {order.items.reduce((s, i) => s + i.quantity, 0)} unit(s)
+                            </td>
+                            <td className="p-3 font-mono font-black text-emerald-700">
+                              R{order.total.toFixed(2)}
+                            </td>
+                            <td className="p-3 text-slate-500">
+                              {new Date(order.createdAt).toLocaleDateString('en-ZA')}
+                            </td>
+                            <td className="p-3 text-right">
+                              <button
+                                type="button"
+                                onClick={() => updateOrderStatus(order.id, 'Ready for Collection')}
+                                className="inline-flex items-center gap-1 px-2.5 py-1 rounded-lg bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold text-[11px] transition"
+                              >
+                                <RotateCcw className="w-3 h-3" />
+                                <span>Reopen</span>
+                              </button>
+                            </td>
+                          </tr>
+                        );
+                      })}
+                    </tbody>
+                  </table>
+                </div>
+              )}
             </div>
           )}
 

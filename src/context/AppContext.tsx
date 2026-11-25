@@ -26,6 +26,7 @@ interface AppContextType {
   orders: Order[];
   addOrder: (order: Order) => void;
   updateOrderStatus: (orderId: string, status: OrderStatus) => void;
+  clearCompletedOrders: () => void;
   addProduct: (product: Omit<Product, 'id'>) => void;
   updateProduct: (productId: string, updates: Partial<Product>) => void;
   deleteProduct: (productId: string) => void;
@@ -258,6 +259,10 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
     }
   };
 
+  const clearCompletedOrders = () => {
+    setOrders((prev) => prev.filter((o) => o.status !== 'Collected'));
+  };
+
   const markNotificationRead = (id: string) => {
     setNotifications((prev) =>
       prev.map((n) => (n.id === id ? { ...n, read: true } : n))
@@ -448,6 +453,7 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
         orders,
         addOrder,
         updateOrderStatus,
+        clearCompletedOrders,
         addProduct,
         updateProduct,
         deleteProduct,
