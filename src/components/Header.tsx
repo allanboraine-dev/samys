@@ -41,7 +41,7 @@ export const Header: React.FC = () => {
               }`}
             >
               <Layers className="w-3 h-3" />
-              Staff Dispatch
+              Manager Portal
             </Link>
           </div>
         </div>
@@ -92,17 +92,6 @@ export const Header: React.FC = () => {
             <FileText className="w-3.5 h-3.5 text-amber-400" />
             Trader Portal & Reorders
           </Link>
-          <Link
-            href="/admin"
-            className={`px-3 py-1.5 rounded-md transition flex items-center gap-1.5 ${
-              pathname === '/admin'
-                ? 'bg-red-600/20 text-red-400 border border-red-600/40'
-                : 'text-slate-300 hover:text-white hover:bg-slate-800/60'
-            }`}
-          >
-            <Layers className="w-3.5 h-3.5" />
-            Store Dispatch Board
-          </Link>
         </nav>
 
         {/* Right Actions: Cart Trigger */}
@@ -138,7 +127,7 @@ export const Header: React.FC = () => {
               </Link>
               <span className="text-slate-600">•</span>
               <Link href="/admin" className="text-slate-400 text-[11px]">
-                Staff
+                Manager
               </Link>
             </div>
           </div>

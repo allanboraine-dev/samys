@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import Link from 'next/link';
 import { useApp } from '@/context/AppContext';
 import { ProductModal } from '@/components/ProductModal';
@@ -18,7 +18,10 @@ import {
   Plus,
   Minus,
   Pencil,
-  Trash2
+  Trash2,
+  Lock,
+  LogOut,
+  ShieldAlert
 } from 'lucide-react';
 
 const STATUS_STEPS: OrderStatus[] = [
@@ -46,6 +49,57 @@ export default function AdminPage() {
   const [editingProduct, setEditingProduct] = useState<Product | null>(null);
   const [confirmDeleteId, setConfirmDeleteId] = useState<string | null>(null);
 
+  const [authStatus, setAuthStatus] = useState<'checking' | 'locked' | 'authenticated'>('checking');
+  const [passcode, setPasscode] = useState('');
+  const [authError, setAuthError] = useState('');
+  const [isSubmittingAuth, setIsSubmittingAuth] = useState(false);
+
+  useEffect(() => {
+    let active = true;
+    fetch('/api/admin-auth')
+      .then((res) => res.json())
+      .then((data: { authenticated?: boolean }) => {
+        if (active) {
+          setAuthStatus(data.authenticated ? 'authenticated' : 'locked');
+        }
+      })
+      .catch(() => {
+        if (active) setAuthStatus('locked');
+      });
+    return () => {
+      active = false;
+    };
+  }, []);
+
+  const handleManagerLogin = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setAuthError('');
+    setIsSubmittingAuth(true);
+    try {
+      const res = await fetch('/api/admin-auth', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ passcode }),
+      });
+      const data = (await res.json()) as { authenticated?: boolean; error?: string };
+      if (res.ok && data.authenticated) {
+        setAuthStatus('authenticated');
+        setPasscode('');
+      } else {
+        setAuthError(data.error || 'Invalid manager passcode.');
+      }
+    } catch {
+      setAuthError('Unable to verify passcode. Please try again.');
+    } finally {
+      setIsSubmittingAuth(false);
+    }
+  };
+
+  const handleManagerLogout = async () => {
+    await fetch('/api/admin-auth', { method: 'DELETE' });
+    setAuthStatus('locked');
+  };
+
   // Filter orders by queue
   const retailOrders = orders.filter((o) => o.type === 'retail_click_collect');
   const traderOrders = orders.filter((o) => o.type === 'trader_bulk');
@@ -56,6 +110,78 @@ export default function AdminPage() {
       updateOrderStatus(order.id, STATUS_STEPS[currentIndex + 1]);
     }
   };
+
+  if (authStatus === 'checking') {
+    return (
+      <div className="min-h-screen bg-slate-100 flex items-center justify-center p-4">
+        <div className="bg-white rounded-2xl border border-slate-200 p-6 shadow-sm text-center text-xs font-semibold text-slate-500">
+          Verifying manager session...
+        </div>
+      </div>
+    );
+  }
+
+  if (authStatus === 'locked') {
+    return (
+      <div className="min-h-screen bg-slate-100 flex items-center justify-center p-4">
+        <div className="w-full max-w-md bg-white rounded-3xl border border-slate-200 shadow-xl overflow-hidden">
+          <div className="bg-slate-900 text-white p-6 border-b border-slate-800">
+            <div className="w-11 h-11 rounded-2xl bg-red-600/20 border border-red-500/40 flex items-center justify-center mb-3">
+              <Lock className="w-5 h-5 text-red-400" />
+            </div>
+            <h1 className="text-lg font-black tracking-tight">
+              Manager Access Required
+            </h1>
+            <p className="text-xs text-slate-400 mt-1">
+              Only authorized Samy&apos;s Wholesalers managers can access stock controls and dispatch queues.
+            </p>
+          </div>
+
+          <form onSubmit={handleManagerLogin} className="p-6 space-y-4 text-xs">
+            {authError && (
+              <div className="flex items-center gap-2 bg-red-50 border border-red-200 text-red-700 font-semibold px-3 py-2.5 rounded-xl">
+                <ShieldAlert className="w-4 h-4 shrink-0" />
+                <span>{authError}</span>
+              </div>
+            )}
+
+            <div>
+              <label className="block font-bold text-slate-700 mb-1.5">
+                Manager Passcode
+              </label>
+              <input
+                type="password"
+                value={passcode}
+                onChange={(e) => setPasscode(e.target.value)}
+                placeholder="Enter manager passcode"
+                className="w-full border border-slate-300 rounded-xl px-3.5 py-2.5 text-sm text-slate-900 focus:outline-none focus:ring-2 focus:ring-slate-900"
+                autoFocus
+                required
+              />
+            </div>
+
+            <button
+              type="submit"
+              disabled={isSubmittingAuth}
+              className="w-full bg-slate-900 hover:bg-slate-800 disabled:opacity-60 text-white font-black text-sm py-2.5 rounded-xl transition shadow-sm"
+            >
+              {isSubmittingAuth ? 'Verifying...' : 'Unlock Manager Console'}
+            </button>
+
+            <div className="pt-2 text-center">
+              <Link
+                href="/"
+                className="inline-flex items-center gap-1.5 text-xs font-semibold text-slate-500 hover:text-slate-900 transition"
+              >
+                <ArrowLeft className="w-3.5 h-3.5" />
+                Back to Storefront
+              </Link>
+            </div>
+          </form>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen bg-slate-100 pb-20">
@@ -101,6 +227,14 @@ export default function AdminPage() {
                 {traderOrders.filter((o) => o.status !== 'Collected').length} In Dispatch
               </span>
             </div>
+            <button
+              type="button"
+              onClick={handleManagerLogout}
+              className="bg-slate-800 hover:bg-red-600/20 hover:border-red-500/50 hover:text-red-300 text-slate-300 px-3 py-2.5 rounded-xl border border-slate-700 font-bold flex items-center gap-1.5 transition"
+            >
+              <LogOut className="w-3.5 h-3.5" />
+              <span>Lock</span>
+            </button>
           </div>
         </div>
       </div>
