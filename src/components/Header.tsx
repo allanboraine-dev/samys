@@ -10,7 +10,6 @@ import {
   Briefcase, 
   MapPin, 
   Phone, 
-  Layers, 
   FileText,
   Bell
 } from 'lucide-react';
@@ -42,15 +41,6 @@ export const Header: React.FC = () => {
               <Phone className="w-3 h-3 text-emerald-400" />
               WhatsApp: 082 555 SAMY
             </span>
-            <Link 
-              href="/admin" 
-              className={`hover:text-white transition flex items-center gap-1 ${
-                pathname === '/admin' ? 'text-amber-400 font-semibold' : ''
-              }`}
-            >
-              <Layers className="w-3 h-3" />
-              Manager Portal
-            </Link>
           </div>
         </div>
       </div>
@@ -146,10 +136,6 @@ export const Header: React.FC = () => {
             <div className="sm:hidden flex items-center gap-2 text-xs">
               <Link href="/trader-portal" className="text-amber-400 underline text-[11px]">
                 Reorder Hub
-              </Link>
-              <span className="text-slate-600">•</span>
-              <Link href="/admin" className="text-slate-400 text-[11px]">
-                Manager
               </Link>
             </div>
           </div>
