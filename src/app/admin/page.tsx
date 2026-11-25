@@ -4,6 +4,7 @@ import React, { useState, useEffect } from 'react';
 import Link from 'next/link';
 import { useApp } from '@/context/AppContext';
 import { ProductModal } from '@/components/ProductModal';
+import { CsvImportModal } from '@/components/CsvImportModal';
 import { Order, OrderStatus, Product } from '@/types';
 import { 
   ArrowLeft, 
@@ -21,7 +22,8 @@ import {
   Trash2,
   Lock,
   LogOut,
-  ShieldAlert
+  ShieldAlert,
+  FileSpreadsheet
 } from 'lucide-react';
 
 const STATUS_STEPS: OrderStatus[] = [
@@ -39,6 +41,7 @@ export default function AdminPage() {
     addProduct,
     updateProduct,
     deleteProduct,
+    importProductsFromCsv,
     updateProductStockQuantity,
     toggleProductStock,
     toggleProductPromo,
@@ -46,6 +49,7 @@ export default function AdminPage() {
 
   const [activeTab, setActiveTab] = useState<'retail' | 'trader' | 'inventory'>('retail');
   const [isProductModalOpen, setIsProductModalOpen] = useState(false);
+  const [isCsvModalOpen, setIsCsvModalOpen] = useState(false);
   const [editingProduct, setEditingProduct] = useState<Product | null>(null);
   const [confirmDeleteId, setConfirmDeleteId] = useState<string | null>(null);
 
@@ -482,17 +486,27 @@ export default function AdminPage() {
                     Add, edit, or remove products, adjust numeric stock levels, or toggle &quot;Month-End Special&quot; promo banners in real-time.
                   </p>
                 </div>
-                <button
-                  type="button"
-                  onClick={() => {
-                    setEditingProduct(null);
-                    setIsProductModalOpen(true);
-                  }}
-                  className="inline-flex items-center gap-1.5 px-3.5 py-2 rounded-xl bg-slate-900 hover:bg-slate-800 text-white text-xs font-bold shadow-sm transition active:scale-95"
-                >
-                  <Plus className="w-4 h-4" />
-                  <span>Add Product</span>
-                </button>
+                <div className="flex items-center gap-2">
+                  <button
+                    type="button"
+                    onClick={() => setIsCsvModalOpen(true)}
+                    className="inline-flex items-center gap-1.5 px-3.5 py-2 rounded-xl bg-white hover:bg-slate-100 text-slate-900 border border-slate-300 text-xs font-bold shadow-xs transition active:scale-95"
+                  >
+                    <FileSpreadsheet className="w-4 h-4 text-emerald-600" />
+                    <span>Import / Export CSV</span>
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setEditingProduct(null);
+                      setIsProductModalOpen(true);
+                    }}
+                    className="inline-flex items-center gap-1.5 px-3.5 py-2 rounded-xl bg-slate-900 hover:bg-slate-800 text-white text-xs font-bold shadow-sm transition active:scale-95"
+                  >
+                    <Plus className="w-4 h-4" />
+                    <span>Add Product</span>
+                  </button>
+                </div>
               </div>
 
               <div className="overflow-x-auto">
@@ -658,6 +672,13 @@ export default function AdminPage() {
             }
           }}
           onDelete={(id) => deleteProduct(id)}
+        />
+      )}
+      {isCsvModalOpen && (
+        <CsvImportModal
+          currentProducts={products}
+          onClose={() => setIsCsvModalOpen(false)}
+          onImport={(incoming, replaceAll) => importProductsFromCsv(incoming, replaceAll)}
         />
       )}
     </div>

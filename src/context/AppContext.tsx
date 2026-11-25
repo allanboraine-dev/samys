@@ -22,6 +22,10 @@ interface AppContextType {
   addProduct: (product: Omit<Product, 'id'>) => void;
   updateProduct: (productId: string, updates: Partial<Product>) => void;
   deleteProduct: (productId: string) => void;
+  importProductsFromCsv: (
+    incoming: Product[],
+    replaceAll: boolean
+  ) => { added: number; updated: number };
   updateProductStockQuantity: (productId: string, quantity: number) => void;
   toggleProductStock: (productId: string) => void;
   toggleProductPromo: (productId: string) => void;
@@ -189,6 +193,43 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
     setCart((prev) => prev.filter((item) => item.product.id !== productId));
   };
 
+  const importProductsFromCsv = (
+    incoming: Product[],
+    replaceAll: boolean
+  ): { added: number; updated: number } => {
+    if (replaceAll) {
+      setProducts(incoming);
+      return { added: incoming.length, updated: 0 };
+    }
+
+    let added = 0;
+    let updated = 0;
+    const next = [...products];
+
+    for (const item of incoming) {
+      const existingIndex = next.findIndex(
+        (p) =>
+          p.id === item.id ||
+          (p.name.toLowerCase() === item.name.toLowerCase() &&
+            p.brand.toLowerCase() === item.brand.toLowerCase())
+      );
+      if (existingIndex !== -1) {
+        next[existingIndex] = {
+          ...next[existingIndex],
+          ...item,
+          id: next[existingIndex].id,
+        };
+        updated++;
+      } else {
+        next.unshift(item);
+        added++;
+      }
+    }
+
+    setProducts(next);
+    return { added, updated };
+  };
+
   const updateProductStockQuantity = (productId: string, quantity: number) => {
     const nextQty = Math.max(0, Math.floor(Number.isFinite(quantity) ? quantity : 0));
     setProducts((prev) =>
@@ -284,6 +325,7 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
         addProduct,
         updateProduct,
         deleteProduct,
+        importProductsFromCsv,
         updateProductStockQuantity,
         toggleProductStock,
         toggleProductPromo,
