@@ -33,6 +33,22 @@ const STATUS_STEPS: OrderStatus[] = [
   'Collected',
 ];
 
+function buildWhatsAppNotifyUrl(order: Order): string | null {
+  const rawPhone =
+    order.retailDetails?.whatsappNumber || order.traderDetails?.whatsappNumber;
+  if (!rawPhone) return null;
+
+  const digits = rawPhone.replace(/\D/g, '');
+  if (!digits) return null;
+  const intlPhone = digits.startsWith('0') ? `27${digits.slice(1)}` : digits;
+
+  const pinText = order.retailDetails?.collectionPin
+    ? ` Collection PIN: ${order.retailDetails.collectionPin}.`
+    : '';
+  const text = `Hi from Samy's Wholesalers (Kimberley)! Your order ${order.orderNumber} status is now: ${order.status}.${pinText} Total: R${order.total.toFixed(2)}.`;
+  return `https://wa.me/${intlPhone}?text=${encodeURIComponent(text)}`;
+}
+
 export default function AdminPage() {
   const {
     orders,
@@ -355,7 +371,7 @@ export default function AdminPage() {
                               </span>
                             </div>
 
-                            {/* Action to advance status */}
+                            {/* Action to advance status + Notify Customer */}
                             {status !== 'Collected' && (
                               <button
                                 onClick={() => advanceStatus(order)}
@@ -366,6 +382,17 @@ export default function AdminPage() {
                                   {STATUS_STEPS[STATUS_STEPS.indexOf(status) + 1]}
                                 </strong>
                               </button>
+                            )}
+                            {buildWhatsAppNotifyUrl(order) && (
+                              <a
+                                href={buildWhatsAppNotifyUrl(order) ?? '#'}
+                                target="_blank"
+                                rel="noopener noreferrer"
+                                className="w-full bg-emerald-50 hover:bg-emerald-100 text-emerald-800 border border-emerald-200 font-bold text-[11px] py-1.5 rounded-lg transition flex items-center justify-center gap-1.5"
+                              >
+                                <Phone className="w-3 h-3" />
+                                <span>WhatsApp Customer ({order.status})</span>
+                              </a>
                             )}
                           </div>
                         );
@@ -453,7 +480,7 @@ export default function AdminPage() {
                               </span>
                             </div>
 
-                            {/* Advance */}
+                            {/* Advance + Notify Customer */}
                             {status !== 'Collected' && (
                               <button
                                 onClick={() => advanceStatus(order)}
@@ -464,6 +491,17 @@ export default function AdminPage() {
                                   {STATUS_STEPS[STATUS_STEPS.indexOf(status) + 1]}
                                 </strong>
                               </button>
+                            )}
+                            {buildWhatsAppNotifyUrl(order) && (
+                              <a
+                                href={buildWhatsAppNotifyUrl(order) ?? '#'}
+                                target="_blank"
+                                rel="noopener noreferrer"
+                                className="w-full bg-emerald-50 hover:bg-emerald-100 text-emerald-800 border border-emerald-200 font-bold text-[11px] py-1.5 rounded-lg transition flex items-center justify-center gap-1.5"
+                              >
+                                <Phone className="w-3 h-3" />
+                                <span>WhatsApp Trader ({order.status})</span>
+                              </a>
                             )}
                           </div>
                         );

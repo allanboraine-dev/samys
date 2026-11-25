@@ -85,3 +85,14 @@ export interface Order {
   retailDetails?: RetailOrderDetails;
   traderDetails?: TraderOrderDetails;
 }
+
+export interface CustomerNotification {
+  id: string;
+  orderId: string;
+  orderNumber: string;
+  title: string;
+  message: string;
+  status: OrderStatus;
+  createdAt: string;
+  read: boolean;
+}

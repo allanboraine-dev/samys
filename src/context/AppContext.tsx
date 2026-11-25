@@ -1,7 +1,7 @@
 'use client';
 
 import React, { createContext, useContext, useState, useEffect } from 'react';
-import { BuyingMode, CartItem, Product, Order, OrderStatus } from '@/types';
+import { BuyingMode, CartItem, Product, Order, OrderStatus, CustomerNotification } from '@/types';
 import { INITIAL_PRODUCTS, INITIAL_ORDERS } from '@/lib/mockData';
 
 interface AppContextType {
@@ -15,6 +15,13 @@ interface AppContextType {
   clearCart: () => void;
   isCartOpen: boolean;
   setIsCartOpen: (open: boolean) => void;
+  notifications: CustomerNotification[];
+  unreadNotificationCount: number;
+  isNotificationsOpen: boolean;
+  setIsNotificationsOpen: (open: boolean) => void;
+  markNotificationRead: (id: string) => void;
+  markAllNotificationsRead: () => void;
+  clearNotifications: () => void;
   products: Product[];
   orders: Order[];
   addOrder: (order: Order) => void;
@@ -43,6 +50,8 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
   const [mode, setMode] = useState<BuyingMode>('retail');
   const [cart, setCart] = useState<CartItem[]>([]);
   const [isCartOpen, setIsCartOpen] = useState(false);
+  const [notifications, setNotifications] = useState<CustomerNotification[]>([]);
+  const [isNotificationsOpen, setIsNotificationsOpen] = useState(false);
   const [products, setProducts] = useState<Product[]>(() =>
     INITIAL_PRODUCTS.map((p) => ({
       ...p,
@@ -67,6 +76,10 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
         const savedOrders = localStorage.getItem('sammys_orders');
         if (savedOrders) {
           setOrders(JSON.parse(savedOrders));
+        }
+        const savedNotifications = localStorage.getItem('sammys_notifications');
+        if (savedNotifications) {
+          setNotifications(JSON.parse(savedNotifications));
         }
         const savedProducts = localStorage.getItem('sammys_products');
         if (savedProducts) {
@@ -95,10 +108,32 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
       localStorage.setItem('sammys_cart', JSON.stringify(cart));
       localStorage.setItem('sammys_orders', JSON.stringify(orders));
       localStorage.setItem('sammys_products', JSON.stringify(products));
+      localStorage.setItem('sammys_notifications', JSON.stringify(notifications));
     } catch {
       // Ignore local storage errors
     }
-  }, [mode, cart, orders, products, mounted]);
+  }, [mode, cart, orders, products, notifications, mounted]);
+
+  // Sync orders & notifications across tabs (e.g. Manager updates status in /admin)
+  useEffect(() => {
+    const handleStorage = (e: StorageEvent) => {
+      try {
+        if (e.key === 'sammys_orders' && e.newValue) {
+          setOrders(JSON.parse(e.newValue));
+        }
+        if (e.key === 'sammys_notifications' && e.newValue) {
+          setNotifications(JSON.parse(e.newValue));
+        }
+        if (e.key === 'sammys_products' && e.newValue) {
+          setProducts(JSON.parse(e.newValue));
+        }
+      } catch {
+        // Ignore cross-tab parse errors
+      }
+    };
+    window.addEventListener('storage', handleStorage);
+    return () => window.removeEventListener('storage', handleStorage);
+  }, []);
 
   const toggleMode = () => {
     setMode((prev) => (prev === 'retail' ? 'trader' : 'retail'));
@@ -145,15 +180,99 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
     setCart([]);
   };
 
+  const buildOrderNotification = (
+    order: Order,
+    status: OrderStatus,
+    isNewOrder: boolean
+  ): CustomerNotification => {
+    const pin = order.retailDetails?.collectionPin;
+    if (isNewOrder) {
+      return {
+        id: `notif-${Date.now()}-${Math.random().toString(36).slice(2, 6)}`,
+        orderId: order.id,
+        orderNumber: order.orderNumber,
+        status,
+        title: `Order ${order.orderNumber} Placed`,
+        message:
+          order.type === 'retail_click_collect'
+            ? `Your Click & Collect order (R${order.total.toFixed(2)}) has been received.${pin ? ` Collection PIN: ${pin}.` : ''}`
+            : `Your ${order.traderDetails?.isQuoteOnly ? 'Pro-Forma Quote' : 'Bulk Order'} (R${order.total.toFixed(2)}) has been received by Kimberley Dispatch.`,
+        createdAt: new Date().toISOString(),
+        read: false,
+      };
+    }
+
+    const statusMessages: Record<OrderStatus, { title: string; message: string }> = {
+      New: {
+        title: `Order ${order.orderNumber} Received`,
+        message: `Your order is queued for processing at Samy's Transvaal Road.`,
+      },
+      Picking: {
+        title: `Order ${order.orderNumber} Being Picked`,
+        message: `Floor staff are currently packing your items at Samy's Wholesalers.`,
+      },
+      'Ready for Collection': {
+        title: `Order ${order.orderNumber} Ready for Collection!`,
+        message:
+          order.type === 'retail_click_collect'
+            ? `Your order is packed and waiting at the Express Counter.${pin ? ` Show PIN: ${pin}.` : ''}`
+            : `Your bulk order is staged at the Trader Dispatch Lane for loading.`,
+      },
+      Collected: {
+        title: `Order ${order.orderNumber} Collected`,
+        message: `Order completed. Thank you for shopping with Samy's Wholesalers!`,
+      },
+    };
+
+    const details = statusMessages[status];
+    return {
+      id: `notif-${Date.now()}-${Math.random().toString(36).slice(2, 6)}`,
+      orderId: order.id,
+      orderNumber: order.orderNumber,
+      status,
+      title: details.title,
+      message: details.message,
+      createdAt: new Date().toISOString(),
+      read: false,
+    };
+  };
+
   const addOrder = (order: Order) => {
     setOrders((prev) => [order, ...prev]);
+    setNotifications((prev) => [
+      buildOrderNotification(order, order.status, true),
+      ...prev,
+    ]);
   };
 
   const updateOrderStatus = (orderId: string, status: OrderStatus) => {
+    const targetOrder = orders.find((o) => o.id === orderId);
     setOrders((prev) =>
       prev.map((o) => (o.id === orderId ? { ...o, status } : o))
     );
+    if (targetOrder && targetOrder.status !== status) {
+      setNotifications((prev) => [
+        buildOrderNotification(targetOrder, status, false),
+        ...prev,
+      ]);
+    }
   };
+
+  const markNotificationRead = (id: string) => {
+    setNotifications((prev) =>
+      prev.map((n) => (n.id === id ? { ...n, read: true } : n))
+    );
+  };
+
+  const markAllNotificationsRead = () => {
+    setNotifications((prev) => prev.map((n) => ({ ...n, read: true })));
+  };
+
+  const clearNotifications = () => {
+    setNotifications([]);
+  };
+
+  const unreadNotificationCount = notifications.filter((n) => !n.read).length;
 
   const addProduct = (productData: Omit<Product, 'id'>) => {
     const qty = Math.max(0, Math.floor(productData.stockQuantity ?? (productData.inStock ? 50 : 0)));
@@ -318,6 +437,13 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
         clearCart,
         isCartOpen,
         setIsCartOpen,
+        notifications,
+        unreadNotificationCount,
+        isNotificationsOpen,
+        setIsNotificationsOpen,
+        markNotificationRead,
+        markAllNotificationsRead,
+        clearNotifications,
         products,
         orders,
         addOrder,

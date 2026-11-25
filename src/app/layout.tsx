@@ -3,6 +3,7 @@ import "./globals.css";
 import { AppProvider } from "@/context/AppContext";
 import { Header } from "@/components/Header";
 import { CartDrawer } from "@/components/CartDrawer";
+import { CustomerOrderNotifications } from "@/components/CustomerOrderNotifications";
 
 export const metadata: Metadata = {
   title: "Samy's Wholesalers Online | Kimberley Cash & Carry",
@@ -21,6 +22,7 @@ export default function RootLayout({
           <Header />
           <main className="flex-1">{children}</main>
           <CartDrawer />
+          <CustomerOrderNotifications />
           <footer className="bg-slate-950 text-slate-400 text-xs py-8 border-t border-slate-800">
             <div className="max-w-7xl mx-auto px-4 sm:px-6 flex flex-col sm:flex-row items-center justify-between gap-4">
               <div className="flex items-center gap-2">

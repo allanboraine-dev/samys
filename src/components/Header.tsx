@@ -11,11 +11,19 @@ import {
   MapPin, 
   Phone, 
   Layers, 
-  FileText 
+  FileText,
+  Bell
 } from 'lucide-react';
 
 export const Header: React.FC = () => {
-  const { mode, setMode, cartTotalCount, setIsCartOpen } = useApp();
+  const {
+    mode,
+    setMode,
+    cartTotalCount,
+    setIsCartOpen,
+    unreadNotificationCount,
+    setIsNotificationsOpen,
+  } = useApp();
   const pathname = usePathname();
 
   return (
@@ -94,8 +102,22 @@ export const Header: React.FC = () => {
           </Link>
         </nav>
 
-        {/* Right Actions: Cart Trigger */}
+        {/* Right Actions: Notifications & Cart Trigger */}
         <div className="flex items-center gap-2">
+          <button
+            type="button"
+            onClick={() => setIsNotificationsOpen(true)}
+            aria-label="Open Order Notifications"
+            className="relative flex items-center justify-center bg-slate-800 hover:bg-slate-700 active:scale-95 text-white p-2.5 rounded-xl text-sm font-semibold transition border border-slate-700 shadow-sm"
+          >
+            <Bell className="w-4 h-4 text-slate-200" />
+            {unreadNotificationCount > 0 && (
+              <span className="absolute -top-1.5 -right-1.5 bg-emerald-500 text-slate-950 text-[10px] font-black px-1.5 py-0.2 rounded-full min-w-[18px] text-center shadow">
+                {unreadNotificationCount}
+              </span>
+            )}
+          </button>
+
           <button
             onClick={() => setIsCartOpen(true)}
             aria-label="Open Shopping Cart"
